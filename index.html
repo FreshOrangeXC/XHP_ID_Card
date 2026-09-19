@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <title>职工电子工牌</title>
+
+  <script>
+    /* ===== 可修改资料（证件照请替换同目录下的 photo.jpg）===== */
+    const STAFF = {
+      name: "徐慧苹",
+      department: "外科门诊 (2)",
+      title: "主管护师",
+      employeeId: "178601"
+    };
+    /* ======================================================== */
+  </script>
+
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: #0e3c38;
+      overflow-x: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+    }
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: pan-y;
+    }
+    .screen {
+      position: relative;
+      width: min(100vw, 946px);
+      aspect-ratio: 946 / 1948;
+      overflow: hidden;
+      container-type: inline-size;
+      background: #2f8378 url("./ui-bg.jpg") center top / 100% 100% no-repeat;
+      pointer-events: none;
+    }
+    .erase {
+      position: absolute;
+      background: rgba(251, 252, 252, .985);
+    }
+    .photo-wrap {
+      position: absolute;
+      left: 8.46%;
+      top: 12.32%;
+      width: 24.74%;
+      aspect-ratio: 234 / 302;
+      overflow: hidden;
+      border-radius: 2.15cqw;
+      background: #cc3137;
+    }
+    .photo-wrap img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .name-box {
+      left: 34.7%;
+      top: 12.05%;
+      width: 53.5%;
+      height: 5.2%;
+      display: flex;
+      align-items: center;
+      padding-left: .9cqw;
+    }
+    .name {
+      color: #050505;
+      font-size: 5.75cqw;
+      line-height: 1;
+      font-weight: 500;
+      letter-spacing: .05em;
+      white-space: nowrap;
+    }
+    .info-box {
+      left: 34.5%;
+      top: 19.25%;
+      width: 54.2%;
+      height: 9.1%;
+      padding: .9cqw 0 0 1.5cqw;
+      color: #050505;
+      font-size: 3.92cqw;
+      font-weight: 600;
+      line-height: 1.5;
+      white-space: nowrap;
+    }
+    .qr-box {
+      position: absolute;
+      left: 21.75%;
+      top: 29.62%;
+      width: 56.35%;
+      aspect-ratio: 1;
+      padding: 1.25cqw;
+      background: #fff;
+    }
+    #qr {
+      display: block;
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+    }
+    .clock-box {
+      left: 9.8%;
+      top: 64.75%;
+      width: 80.4%;
+      height: 7.1%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #030303;
+      font-family: "Arial Narrow", "Roboto Condensed", Arial, sans-serif;
+      font-size: 7.65cqw;
+      font-weight: 600;
+      font-stretch: condensed;
+      letter-spacing: .005em;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <main class="screen" aria-label="郑州大学第一附属医院职工电子工牌">
+    <div class="photo-wrap"><img src="./photo.jpg" alt="证件照"></div>
+
+    <div class="erase name-box"><span class="name" id="staff-name"></span></div>
+    <div class="erase info-box">
+      <div>科室：<span id="staff-department"></span></div>
+      <div>职称：<span id="staff-title"></span></div>
+      <div>工号：<span id="staff-id"></span></div>
+    </div>
+
+    <div class="qr-box"><canvas id="qr" width="410" height="410" aria-label="随机二维码"></canvas></div>
+    <div class="erase clock-box" id="clock"></div>
+  </main>
+
+  <script>
+    const byId = id => document.getElementById(id);
+    byId("staff-name").textContent = STAFF.name;
+    byId("staff-department").textContent = STAFF.department;
+    byId("staff-title").textContent = STAFF.title;
+    byId("staff-id").textContent = STAFF.employeeId;
+
+    function pad(value) { return String(value).padStart(2, "0"); }
+    function refreshClock() {
+      const now = new Date();
+      byId("clock").textContent =
+        `${pad(now.getMonth() + 1)}-${pad(now.getDate())} ` +
+        `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    }
+    refreshClock();
+    setInterval(refreshClock, 250);
+
+    // 每次打开页面都会绘制一张新的随机绿码（仅作界面展示）。
+    function drawRandomQr() {
+      const canvas = byId("qr");
+      const ctx = canvas.getContext("2d");
+      const modules = 41;
+      const quiet = 2;
+      const total = modules + quiet * 2;
+      const cell = canvas.width / total;
+      const reserved = Array.from({ length: modules }, () => Array(modules).fill(false));
+      const matrix = Array.from({ length: modules }, () => Array(modules).fill(false));
+
+      function finder(x0, y0) {
+        for (let y = -1; y <= 7; y++) for (let x = -1; x <= 7; x++) {
+          const px = x0 + x, py = y0 + y;
+          if (px < 0 || py < 0 || px >= modules || py >= modules) continue;
+          reserved[py][px] = true;
+          matrix[py][px] = x >= 0 && x <= 6 && y >= 0 && y <= 6 &&
+            (x === 0 || x === 6 || y === 0 || y === 6 || (x >= 2 && x <= 4 && y >= 2 && y <= 4));
+        }
+      }
+      finder(0, 0); finder(modules - 7, 0); finder(0, modules - 7);
+
+      // Timing patterns and one alignment marker make the result visually faithful.
+      for (let i = 8; i < modules - 8; i++) {
+        reserved[6][i] = reserved[i][6] = true;
+        matrix[6][i] = matrix[i][6] = i % 2 === 0;
+      }
+      const ax = modules - 9, ay = modules - 9;
+      for (let y = -2; y <= 2; y++) for (let x = -2; x <= 2; x++) {
+        reserved[ay + y][ax + x] = true;
+        matrix[ay + y][ax + x] = Math.max(Math.abs(x), Math.abs(y)) !== 1;
+      }
+
+      const seed = new Uint32Array(modules * modules);
+      crypto.getRandomValues(seed);
+      let n = 0;
+      for (let y = 0; y < modules; y++) for (let x = 0; x < modules; x++) {
+        if (!reserved[y][x]) matrix[y][x] = (seed[n++] & 1) === 1;
+      }
+
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#55ad62";
+      for (let y = 0; y < modules; y++) for (let x = 0; x < modules; x++) {
+        if (matrix[y][x]) {
+          const x1 = Math.round((x + quiet) * cell);
+          const y1 = Math.round((y + quiet) * cell);
+          const x2 = Math.round((x + quiet + 1) * cell);
+          const y2 = Math.round((y + quiet + 1) * cell);
+          ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
+        }
+      }
+    }
+    drawRandomQr();
+
+    // 页面仅展示：拦截所有点击、拖拽和长按菜单。
+    document.addEventListener("click", event => event.preventDefault(), true);
+    document.addEventListener("dragstart", event => event.preventDefault(), true);
+    document.addEventListener("contextmenu", event => event.preventDefault(), true);
+  </script>
+</body>
+</html>

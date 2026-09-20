@@ -10,11 +10,11 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="电子工牌">
-  <!-- ========================================= -->
 
   <!-- ===== 主屏幕图标（180x180，放同目录）===== -->
   <link rel="apple-touch-icon" href="./icon-180.png">
   <!-- ========================================= -->
+
   <script>
     /* ===== 可修改资料（证件照请替换同目录下的 photo.jpg）===== */
     const STAFF = {
@@ -116,22 +116,6 @@
       white-space: nowrap;
     }
 
-    .qr-box {
-      position: absolute;
-      left: 21.75%;
-      top: 29.62%;
-      width: 56.35%;
-      aspect-ratio: 1;
-      padding: 1.25cqw;
-      background: #fff;
-    }
-    #qr {
-      display: block;
-      width: 100%;
-      height: 100%;
-      image-rendering: pixelated;
-    }
-
     .clock-box {
       left: 9.8%;
       top: 64.75%;
@@ -161,7 +145,6 @@
       <div>工号：<span id="staff-id"></span></div>
     </div>
 
-    <div class="qr-box"><canvas id="qr" width="410" height="410" aria-label="随机二维码"></canvas></div>
     <div class="erase clock-box" id="clock"></div>
   </main>
 
@@ -181,61 +164,6 @@
     }
     refreshClock();
     setInterval(refreshClock, 250);
-
-    // 每次打开页面都会绘制一张新的随机绿码（仅作界面展示）。
-    function drawRandomQr() {
-      const canvas = byId("qr");
-      const ctx = canvas.getContext("2d");
-      const modules = 41;
-      const quiet = 2;
-      const total = modules + quiet * 2;
-      const cell = canvas.width / total;
-      const reserved = Array.from({ length: modules }, () => Array(modules).fill(false));
-      const matrix = Array.from({ length: modules }, () => Array(modules).fill(false));
-
-      function finder(x0, y0) {
-        for (let y = -1; y <= 7; y++) for (let x = -1; x <= 7; x++) {
-          const px = x0 + x, py = y0 + y;
-          if (px < 0 || py < 0 || px >= modules || py >= modules) continue;
-          reserved[py][px] = true;
-          matrix[py][px] = x >= 0 && x <= 6 && y >= 0 && y <= 6 &&
-            (x === 0 || x === 6 || y === 0 || y === 6 || (x >= 2 && x <= 4 && y >= 2 && y <= 4));
-        }
-      }
-      finder(0, 0); finder(modules - 7, 0); finder(0, modules - 7);
-
-      // Timing patterns and one alignment marker make the result visually faithful.
-      for (let i = 8; i < modules - 8; i++) {
-        reserved[6][i] = reserved[i][6] = true;
-        matrix[6][i] = matrix[i][6] = i % 2 === 0;
-      }
-      const ax = modules - 9, ay = modules - 9;
-      for (let y = -2; y <= 2; y++) for (let x = -2; x <= 2; x++) {
-        reserved[ay + y][ax + x] = true;
-        matrix[ay + y][ax + x] = Math.max(Math.abs(x), Math.abs(y)) !== 1;
-      }
-
-      const seed = new Uint32Array(modules * modules);
-      crypto.getRandomValues(seed);
-      let n = 0;
-      for (let y = 0; y < modules; y++) for (let x = 0; x < modules; x++) {
-        if (!reserved[y][x]) matrix[y][x] = (seed[n++] & 1) === 1;
-      }
-
-      ctx.fillStyle = "#fff";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#55ad62";
-      for (let y = 0; y < modules; y++) for (let x = 0; x < modules; x++) {
-        if (matrix[y][x]) {
-          const x1 = Math.round((x + quiet) * cell);
-          const y1 = Math.round((y + quiet) * cell);
-          const x2 = Math.round((x + quiet + 1) * cell);
-          const y2 = Math.round((y + quiet + 1) * cell);
-          ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
-        }
-      }
-    }
-    drawRandomQr();
 
     // 页面仅展示：拦截所有点击、拖拽和长按菜单。
     document.addEventListener("click", event => event.preventDefault(), true);

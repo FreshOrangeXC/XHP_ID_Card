@@ -11,6 +11,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="电子工牌">
   <!-- ========================================= -->
+
   <script>
     /* ===== 可修改资料（证件照请替换同目录下的 photo.jpg）===== */
     const STAFF = {
@@ -25,6 +26,7 @@
   <style>
     :root { color-scheme: light; }
     * { box-sizing: border-box; }
+
     html, body {
       margin: 0;
       min-height: 100%;
@@ -32,6 +34,8 @@
       overflow-x: hidden;
       font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
     }
+
+    /* iPhone 15 Pro：背景从物理顶端铺满，内容避开灵动岛安全区 */
     body {
       display: flex;
       justify-content: center;
@@ -40,7 +44,12 @@
       -webkit-user-select: none;
       -webkit-touch-callout: none;
       touch-action: pan-y;
+      min-height: 100vh;
+      min-height: 100dvh;                      /* 动态视口高度，更准 */
+      padding-top: env(safe-area-inset-top);    /* iPhone 15 Pro = 59pt */
+      padding-bottom: env(safe-area-inset-bottom); /* 避开底部 Home 横条 */
     }
+
     .screen {
       position: relative;
       width: min(100vw, 946px);
@@ -50,10 +59,12 @@
       background: #2f8378 url("./ui-bg.jpg") center top / 100% 100% no-repeat;
       pointer-events: none;
     }
+
     .erase {
       position: absolute;
       background: rgba(251, 252, 252, .985);
     }
+
     .photo-wrap {
       position: absolute;
       left: 8.46%;
@@ -70,6 +81,7 @@
       height: 100%;
       object-fit: cover;
     }
+
     .name-box {
       left: 34.7%;
       top: 12.05%;
@@ -87,6 +99,7 @@
       letter-spacing: .05em;
       white-space: nowrap;
     }
+
     .info-box {
       left: 34.5%;
       top: 19.25%;
@@ -99,6 +112,7 @@
       line-height: 1.5;
       white-space: nowrap;
     }
+
     .qr-box {
       position: absolute;
       left: 21.75%;
@@ -114,6 +128,7 @@
       height: 100%;
       image-rendering: pixelated;
     }
+
     .clock-box {
       left: 9.8%;
       top: 64.75%;
